@@ -31,18 +31,17 @@ export default function LoginPage() {
       <div className="w-full max-w-sm">
         {/* Logo */}
         <div className="flex flex-col items-center mb-8">
-          <div className="w-16 h-16 mb-4">
+          <div className="w-16 h-16 mb-4 relative">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/logo.png"
               alt="V4 Company"
               className="w-full h-full object-contain"
-              onError={e => {
-                const el = e.target as HTMLImageElement
-                el.style.display = 'none'
-                el.parentElement!.innerHTML = '<div style="width:64px;height:64px;background:#EF4444;border-radius:16px;display:flex;align-items:center;justify-content:center;color:white;font-weight:bold;font-size:24px">V4</div>'
-              }}
+              onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
             />
+            <div className="w-16 h-16 bg-red-500 rounded-2xl flex items-center justify-center absolute inset-0 -z-10">
+              <span className="text-white font-black text-2xl tracking-tight">V4</span>
+            </div>
           </div>
           <h1 className="text-2xl font-bold text-white">Ad Library</h1>
           <p className="text-zinc-500 text-sm mt-1">V4 Company</p>
