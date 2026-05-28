@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import AppShell from '@/components/layout/AppShell'
 import AddClientModal from '@/components/clients/AddClientModal'
-import { Plus, RefreshCw, ArrowRight, Target } from 'lucide-react'
+import { Plus, RefreshCw, ArrowRight, Target, Trash2 } from 'lucide-react'
 import { mockClients, mockAds } from '@/lib/mock-data'
 import type { Client } from '@/types'
 import Link from 'next/link'
@@ -15,6 +15,7 @@ function fmtBRL(n: number) {
 export default function ClientsPage() {
   const [clients, setClients] = useState<Client[]>(mockClients)
   const [showModal, setShowModal] = useState(false)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
 
   async function loadClients() {
     try {
@@ -24,6 +25,18 @@ export default function ClientsPage() {
   }
 
   useEffect(() => { loadClients() }, [])
+
+  async function handleDelete(e: React.MouseEvent, id: string, name: string) {
+    e.preventDefault()
+    if (!confirm(`Remover "${name}"? Esta ação não pode ser desfeita.`)) return
+    setDeletingId(id)
+    try {
+      await fetch(`/api/clients/${id}`, { method: 'DELETE' })
+      setClients(prev => prev.filter(c => c.id !== id))
+    } finally {
+      setDeletingId(null)
+    }
+  }
 
   function getStats(clientId: string) {
     const ads = mockAds.filter(a => a.client_id === clientId)
@@ -52,47 +65,56 @@ export default function ClientsPage() {
           {clients.map(client => {
             const stats = getStats(client.id)
             return (
-              <Link key={client.id} href={`/clients/${client.id}`}
-                className="bg-zinc-900 rounded-xl border border-zinc-800 p-5 hover:border-zinc-700 hover:shadow-lg hover:shadow-black/20 transition-all group">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-lg"
-                      style={{ backgroundColor: client.color }}>
-                      {client.name.charAt(0)}
+              <div key={client.id} className="relative group">
+                <Link href={`/clients/${client.id}`}
+                  className="block bg-zinc-900 rounded-xl border border-zinc-800 p-5 hover:border-zinc-700 hover:shadow-lg hover:shadow-black/20 transition-all">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-lg"
+                        style={{ backgroundColor: client.color }}>{client.name.charAt(0)}</div>
+                      <div>
+                        <p className="font-bold text-white">{client.name}</p>
+                        {client.meta_account_id && <p className="text-xs text-zinc-500">ID: {client.meta_account_id}</p>}
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-bold text-white">{client.name}</p>
-                      {client.meta_account_id && <p className="text-xs text-zinc-500">ID: {client.meta_account_id}</p>}
+                    <ArrowRight className="w-4 h-4 text-zinc-600 group-hover:text-red-400 transition-colors" />
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2 text-center">
+                    <div className="bg-zinc-800 rounded-lg p-2">
+                      <Target className="w-3 h-3 text-red-400 mx-auto mb-0.5" />
+                      <p className="text-lg font-bold text-white">{stats.activeAds}</p>
+                      <p className="text-xs text-zinc-500">ads ativos</p>
+                    </div>
+                    <div className="bg-zinc-800 rounded-lg p-2">
+                      <p className="text-xs text-zinc-500 mb-0.5">Gasto</p>
+                      <p className="text-sm font-bold text-white">{fmtBRL(stats.totalSpend)}</p>
+                    </div>
+                    <div className="bg-zinc-800 rounded-lg p-2">
+                      <p className="text-xs text-zinc-500 mb-0.5">CPL médio</p>
+                      <p className="text-sm font-bold text-emerald-400">{fmtBRL(stats.avgCpl)}</p>
                     </div>
                   </div>
-                  <ArrowRight className="w-4 h-4 text-zinc-600 group-hover:text-red-400 transition-colors" />
-                </div>
 
-                <div className="grid grid-cols-3 gap-2 text-center">
-                  <div className="bg-zinc-800 rounded-lg p-2">
-                    <Target className="w-3 h-3 text-red-400 mx-auto mb-0.5" />
-                    <p className="text-lg font-bold text-white">{stats.activeAds}</p>
-                    <p className="text-xs text-zinc-500">ads ativos</p>
+                  <div className="mt-3 flex items-center gap-1.5">
+                    <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                    <span className="text-xs text-zinc-500">Conectado ao Meta Ads</span>
+                    <button onClick={e => e.preventDefault()} className="ml-auto text-zinc-600 hover:text-red-400 transition-colors">
+                      <RefreshCw className="w-3.5 h-3.5" />
+                    </button>
                   </div>
-                  <div className="bg-zinc-800 rounded-lg p-2">
-                    <p className="text-xs text-zinc-500 mb-0.5">Gasto</p>
-                    <p className="text-sm font-bold text-white">{fmtBRL(stats.totalSpend)}</p>
-                  </div>
-                  <div className="bg-zinc-800 rounded-lg p-2">
-                    <p className="text-xs text-zinc-500 mb-0.5">CPL médio</p>
-                    <p className="text-sm font-bold text-emerald-400">{fmtBRL(stats.avgCpl)}</p>
-                  </div>
-                </div>
+                </Link>
 
-                <div className="mt-3 flex items-center gap-1.5">
-                  <div className="w-2 h-2 rounded-full bg-emerald-500" />
-                  <span className="text-xs text-zinc-500">Conectado ao Meta Ads</span>
-                  <button onClick={e => { e.preventDefault() }}
-                    className="ml-auto text-zinc-600 hover:text-red-400 transition-colors">
-                    <RefreshCw className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </Link>
+                {/* Delete button */}
+                <button
+                  onClick={e => handleDelete(e, client.id, client.name)}
+                  disabled={deletingId === client.id}
+                  className="absolute top-3 right-3 w-7 h-7 bg-zinc-800 hover:bg-red-500/20 border border-zinc-700 hover:border-red-500/30 rounded-lg items-center justify-center text-zinc-500 hover:text-red-400 transition-all opacity-0 group-hover:opacity-100 hidden group-hover:flex disabled:opacity-50"
+                  title="Remover cliente"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              </div>
             )
           })}
 
