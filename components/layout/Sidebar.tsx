@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { LayoutDashboard, Users, Eye, Settings, LogOut } from 'lucide-react'
+import { LayoutDashboard, Users, Eye, Settings, LogOut, BarChart2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useEffect, useState } from 'react'
 import clsx from 'clsx'
@@ -11,6 +11,7 @@ const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/clients', label: 'Clientes', icon: Users },
   { href: '/competitors', label: 'Concorrentes', icon: Eye },
+  { href: '/reports', label: 'Relatório IA', icon: BarChart2 },
   { href: '/settings', label: 'Configurações', icon: Settings },
 ]
 
