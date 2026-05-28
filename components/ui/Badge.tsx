@@ -6,23 +6,18 @@ interface BadgeProps {
 }
 
 const variantMap: Record<string, string> = {
-  active: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-  paused: 'bg-amber-50 text-amber-700 border-amber-200',
-  archived: 'bg-slate-100 text-slate-500 border-slate-200',
-  meta: 'bg-blue-50 text-blue-700 border-blue-200',
-  google: 'bg-red-50 text-red-700 border-red-200',
-  tiktok: 'bg-slate-900 text-white border-slate-900',
-  neutral: 'bg-slate-100 text-slate-600 border-slate-200',
+  active: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+  paused: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+  archived: 'bg-zinc-800 text-zinc-500 border-zinc-700',
+  meta: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
+  google: 'bg-red-500/10 text-red-400 border-red-500/20',
+  tiktok: 'bg-zinc-800 text-white border-zinc-700',
+  neutral: 'bg-zinc-800 text-zinc-400 border-zinc-700',
 }
 
 export default function Badge({ label, variant = 'neutral' }: BadgeProps) {
   return (
-    <span
-      className={clsx(
-        'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border',
-        variantMap[variant],
-      )}
-    >
+    <span className={clsx('inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border', variantMap[variant])}>
       {label}
     </span>
   )

@@ -23,7 +23,11 @@ export interface Ad {
   ctr: number
   cpl?: number
   cpc?: number
+  cpm?: number
   reach?: number
+  frequency?: number
+  roas?: number
+  results?: number
   thumbnail_url?: string
   creative_body?: string
   platform: 'meta' | 'google' | 'tiktok'
