@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { LayoutDashboard, Users, Eye, Settings, LogOut, BarChart2 } from 'lucide-react'
+import { LayoutDashboard, Users, Eye, Settings, LogOut, BarChart2, ChevronDown } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useEffect, useState } from 'react'
 import clsx from 'clsx'
@@ -19,17 +19,30 @@ export default function Sidebar() {
   const pathname = usePathname()
   const router = useRouter()
   const [userEmail, setUserEmail] = useState<string | null>(null)
+  const [activeBuName, setActiveBuName] = useState<string | null>(null)
 
   useEffect(() => {
     const supabase = createClient()
     supabase.auth.getUser().then(({ data: { user } }) => {
       setUserEmail(user?.email ?? null)
     })
+
+    const buId = localStorage.getItem('active_bu_id')
+    if (buId) {
+      fetch('/api/workspaces/my-bus')
+        .then(r => r.json())
+        .then((data: { bu_id: string; bus: { name: string } }[]) => {
+          const found = data.find(b => b.bu_id === buId)
+          if (found?.bus?.name) setActiveBuName(found.bus.name)
+        })
+        .catch(() => {})
+    }
   }, [])
 
   async function handleLogout() {
     const supabase = createClient()
     await supabase.auth.signOut()
+    localStorage.removeItem('active_bu_id')
     router.push('/login')
     router.refresh()
   }
@@ -40,16 +53,8 @@ export default function Sidebar() {
       <div className="flex items-center gap-2.5 px-5 py-4 border-b border-zinc-800">
         <div className="w-8 h-8 flex items-center justify-center flex-shrink-0">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/logo.png"
-            alt="V4"
-            className="w-8 h-8 object-contain"
-            onError={e => {
-              const el = e.target as HTMLImageElement
-              el.style.display = 'none'
-              el.parentElement!.innerHTML = '<div class="w-8 h-8 bg-red-500 rounded-lg flex items-center justify-center text-white font-bold text-sm">V4</div>'
-            }}
-          />
+          <img src="/logo.png" alt="V4" className="w-8 h-8 object-contain"
+            onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
         </div>
         <div>
           <p className="text-white font-bold text-sm leading-none">Ad Library</p>
@@ -57,8 +62,31 @@ export default function Sidebar() {
         </div>
       </div>
 
+      {/* Active BU */}
+      {activeBuName && (
+        <button
+          onClick={() => router.push('/workspace')}
+          className="mx-3 mt-3 flex items-center justify-between px-3 py-2 bg-red-500/10 border border-red-500/20 rounded-lg hover:bg-red-500/15 transition-colors"
+        >
+          <div className="text-left">
+            <p className="text-xs text-zinc-500">Workspace ativo</p>
+            <p className="text-sm font-bold text-red-400 truncate">{activeBuName}</p>
+          </div>
+          <ChevronDown className="w-3.5 h-3.5 text-red-400 flex-shrink-0" />
+        </button>
+      )}
+
+      {!activeBuName && (
+        <button
+          onClick={() => router.push('/workspace')}
+          className="mx-3 mt-3 flex items-center justify-center gap-1.5 px-3 py-2 border border-dashed border-zinc-700 rounded-lg hover:border-red-500/40 hover:text-red-400 text-zinc-500 text-xs transition-colors"
+        >
+          Selecionar BU
+        </button>
+      )}
+
       {/* Nav */}
-      <nav className="flex-1 px-3 py-4 space-y-0.5">
+      <nav className="flex-1 px-3 py-3 space-y-0.5">
         {navItems.map(({ href, label, icon: Icon }) => {
           const active = pathname === href || (href !== '/dashboard' && pathname.startsWith(href))
           return (
@@ -81,10 +109,8 @@ export default function Sidebar() {
             <p className="text-zinc-500 text-xs truncate">{userEmail}</p>
           </div>
         )}
-        <button
-          onClick={handleLogout}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-zinc-500 hover:text-red-400 hover:bg-red-500/5 transition-all"
-        >
+        <button onClick={handleLogout}
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-zinc-500 hover:text-red-400 hover:bg-red-500/5 transition-all">
           <LogOut className="w-4 h-4 flex-shrink-0" />
           Sair
         </button>

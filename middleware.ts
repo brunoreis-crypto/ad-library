@@ -25,7 +25,7 @@ export async function middleware(request: NextRequest) {
 
   const { pathname } = request.nextUrl
 
-  const isPublicPath = pathname === '/login' || pathname.startsWith('/auth/')
+  const isPublicPath = pathname === '/login' || pathname.startsWith('/auth/') || pathname === '/workspace'
 
   if (!user && !isPublicPath) {
     return NextResponse.redirect(new URL('/login', request.url))

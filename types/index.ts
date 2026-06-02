@@ -1,3 +1,20 @@
+export interface Squad {
+  id: string
+  name: string
+  created_at: string
+  bus?: BU[]
+}
+
+export interface BU {
+  id: string
+  name: string
+  squad_id: string
+  meta_system_token?: string
+  meta_ad_library_token?: string
+  created_at: string
+  squad?: Squad
+}
+
 export interface Client {
   id: string
   name: string
@@ -5,6 +22,7 @@ export interface Client {
   color: string
   meta_account_id?: string
   meta_access_token?: string
+  bu_id?: string
   is_active: boolean
   created_at: string
 }
@@ -45,6 +63,7 @@ export interface Competitor {
   industry?: string
   website?: string
   notes?: string
+  bu_id?: string
   created_at: string
   _ads_count?: number
 }
