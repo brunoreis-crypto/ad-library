@@ -20,6 +20,7 @@ function daysRunning(startDate?: string) {
 }
 
 export default function CompetitorAdCard({ ad }: Props) {
+  const [showImage, setShowImage] = useState(false)
   const [showInsights, setShowInsights] = useState(false)
   const [loading, setLoading] = useState(false)
   const [insights, setInsights] = useState<{ what_works: string; angle: string; adaptation_suggestion: string } | null>(
@@ -46,11 +47,22 @@ export default function CompetitorAdCard({ ad }: Props) {
   }
 
   return (
+    <>
+    {showImage && ad.thumbnail_url && (
+      <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4" onClick={() => setShowImage(false)}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={ad.thumbnail_url} alt="Ad creative" className="max-h-[90vh] max-w-[90vw] object-contain rounded-lg shadow-2xl" onClick={e => e.stopPropagation()} />
+        <button onClick={() => setShowImage(false)} className="absolute top-4 right-4 text-white text-2xl font-bold hover:text-zinc-300">✕</button>
+      </div>
+    )}
     <div className="bg-zinc-900 rounded-xl border border-zinc-800 overflow-hidden hover:border-zinc-700 hover:shadow-lg hover:shadow-black/20 transition-all">
-      <div className="h-40 bg-zinc-800 flex items-center justify-center px-4 relative overflow-hidden">
+      <div
+        className="h-40 bg-zinc-800 flex items-center justify-center px-4 relative overflow-hidden cursor-pointer"
+        onClick={() => ad.thumbnail_url && setShowImage(true)}
+      >
         {ad.thumbnail_url ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={ad.thumbnail_url} alt="Ad creative" className="w-full h-full object-cover" />
+          <img src={ad.thumbnail_url} alt="Ad creative" className="w-full h-full object-cover hover:scale-105 transition-transform duration-200" />
         ) : (
           <p className="text-zinc-500 text-xs text-center line-clamp-4">{ad.creative_body || 'Sem texto disponível'}</p>
         )}
@@ -109,5 +121,6 @@ export default function CompetitorAdCard({ ad }: Props) {
         )}
       </div>
     </div>
+    </>
   )
 }
