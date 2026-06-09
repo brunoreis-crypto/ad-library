@@ -1,8 +1,12 @@
 import { NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase/server'
 import { searchAdLibrary } from '@/lib/meta-api'
 
 export async function POST(_req: Request, { params }: { params: { id: string } }) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 })
+
   const { data: competitor, error: compErr } = await supabase
     .from('competitors')
     .select('*')
@@ -10,14 +14,15 @@ export async function POST(_req: Request, { params }: { params: { id: string } }
     .single()
 
   if (compErr || !competitor) return NextResponse.json({ error: 'Concorrente não encontrado' }, { status: 404 })
-  if (!competitor.facebook_page_id)
-    return NextResponse.json({ error: 'Facebook Page ID não configurado' }, { status: 400 })
 
-  const accessToken = process.env.META_AD_LIBRARY_TOKEN
-  if (!accessToken) return NextResponse.json({ error: 'META_AD_LIBRARY_TOKEN não configurado' }, { status: 500 })
+  const accessToken = process.env.META_ACCESS_TOKEN
+  if (!accessToken) return NextResponse.json({ error: 'META_ACCESS_TOKEN não configurado' }, { status: 500 })
+
+  const query = competitor.facebook_page_id || competitor.name
+  const byPageId = !!competitor.facebook_page_id
 
   try {
-    const apiData = await searchAdLibrary(competitor.facebook_page_id, accessToken)
+    const apiData = await searchAdLibrary(query, accessToken, byPageId)
     const ads = apiData.data ?? []
 
     const rows = ads.map((ad: Record<string, unknown>) => {

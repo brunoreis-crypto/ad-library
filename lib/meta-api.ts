@@ -22,22 +22,30 @@ export async function fetchAdsByAccount(accountId: string, accessToken: string) 
   return res.json()
 }
 
-export async function searchAdLibrary(pageId: string, accessToken: string) {
+export async function searchAdLibrary(query: string, accessToken: string, byPageId = false) {
   const url = new URL(`${BASE_URL}/ads_archive`)
   url.searchParams.set('access_token', accessToken)
   url.searchParams.set('ad_reached_countries', '["BR"]')
-  url.searchParams.set('search_page_ids', `[${pageId}]`)
   url.searchParams.set('ad_active_status', 'ACTIVE')
   url.searchParams.set('fields', [
-    'id', 'ad_snapshot_url', 'ad_creative_bodies',
+    'id', 'page_name', 'ad_snapshot_url', 'ad_creative_bodies',
     'ad_creative_link_captions', 'ad_delivery_start_time',
     'ad_delivery_stop_time', 'publisher_platforms',
     'impressions', 'spend',
   ].join(','))
   url.searchParams.set('limit', '50')
 
+  if (byPageId && query) {
+    url.searchParams.set('search_page_ids', `[${query}]`)
+  } else {
+    url.searchParams.set('search_terms', query)
+  }
+
   const res = await fetch(url.toString())
-  if (!res.ok) throw new Error(`Meta Ad Library API error: ${res.status}`)
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error((err as { error?: { message?: string } }).error?.message ?? `Meta Ad Library API error: ${res.status}`)
+  }
   return res.json()
 }
 
