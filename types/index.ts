@@ -75,6 +75,7 @@ export interface CompetitorAd {
   creative_body?: string
   creative_link_caption?: string
   ad_snapshot_url?: string
+  thumbnail_url?: string
   status: string
   impressions_lower?: number
   impressions_upper?: number

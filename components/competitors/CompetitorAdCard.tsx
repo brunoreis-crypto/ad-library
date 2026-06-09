@@ -47,8 +47,13 @@ export default function CompetitorAdCard({ ad }: Props) {
 
   return (
     <div className="bg-zinc-900 rounded-xl border border-zinc-800 overflow-hidden hover:border-zinc-700 hover:shadow-lg hover:shadow-black/20 transition-all">
-      <div className="h-32 bg-zinc-800 flex items-center justify-center px-4 relative">
-        <p className="text-zinc-500 text-xs text-center line-clamp-4">{ad.creative_body || 'Sem texto disponível'}</p>
+      <div className="h-40 bg-zinc-800 flex items-center justify-center px-4 relative overflow-hidden">
+        {ad.thumbnail_url ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={ad.thumbnail_url} alt="Ad creative" className="w-full h-full object-cover" />
+        ) : (
+          <p className="text-zinc-500 text-xs text-center line-clamp-4">{ad.creative_body || 'Sem texto disponível'}</p>
+        )}
         {days !== null && days > 30 && (
           <div className="absolute top-2 left-2 bg-red-500 text-white text-xs px-2 py-0.5 rounded-full font-bold">
             🔥 {days}d
