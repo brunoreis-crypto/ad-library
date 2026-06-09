@@ -5,11 +5,11 @@ async function searchViaApify(query: string): Promise<ApifyAd[]> {
   const token = process.env.APIFY_API_TOKEN
   if (!token) throw new Error('APIFY_API_TOKEN não configurado')
 
-  const searchUrl = `https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=BR&q=${encodeURIComponent(query)}`
+  const searchUrl = `https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=BR&media_type=all&q=${encodeURIComponent(query)}&search_type=keyword_unordered`
 
   // Start the actor run
   const startRes = await fetch(
-    `https://api.apify.com/v2/acts/curious_coder~facebook-ads-library-scraper/runs?token=${token}`,
+    `https://api.apify.com/v2/acts/AQ1yCqZf7u2s4Ig0j/runs?token=${token}`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
