@@ -1,6 +1,66 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { searchAdLibrary } from '@/lib/meta-api'
+
+async function searchViaApify(query: string): Promise<ApifyAd[]> {
+  const token = process.env.APIFY_API_TOKEN
+  if (!token) throw new Error('APIFY_API_TOKEN não configurado')
+
+  // Start the actor run
+  const startRes = await fetch(
+    `https://api.apify.com/v2/acts/apify~facebook-ads-library-scraper/runs?token=${token}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        searchTerms: [query],
+        country: 'BR',
+        adActiveStatus: 'ACTIVE',
+        maxResultsPerQuery: 50,
+      }),
+    }
+  )
+
+  if (!startRes.ok) {
+    const err = await startRes.json().catch(() => ({}))
+    throw new Error((err as { error?: { message?: string } }).error?.message ?? `Apify error: ${startRes.status}`)
+  }
+
+  const { data: run } = await startRes.json() as { data: { id: string; defaultDatasetId: string } }
+
+  // Poll until finished (max 90s)
+  for (let i = 0; i < 18; i++) {
+    await new Promise(r => setTimeout(r, 5000))
+    const statusRes = await fetch(`https://api.apify.com/v2/actor-runs/${run.id}?token=${token}`)
+    const { data: status } = await statusRes.json() as { data: { status: string } }
+    if (status.status === 'SUCCEEDED') break
+    if (status.status === 'FAILED' || status.status === 'ABORTED') throw new Error('Apify run falhou')
+  }
+
+  // Fetch results
+  const resultsRes = await fetch(
+    `https://api.apify.com/v2/datasets/${run.defaultDatasetId}/items?token=${token}&limit=50`
+  )
+  if (!resultsRes.ok) throw new Error('Erro ao buscar resultados do Apify')
+  return resultsRes.json() as Promise<ApifyAd[]>
+}
+
+interface ApifyAd {
+  adArchiveID?: string
+  id?: string
+  snapshot?: {
+    body?: { text?: string }
+    cards?: { body?: string }[]
+    title?: string
+    link_url?: string
+  }
+  snapshotUrl?: string
+  startDate?: number
+  endDate?: number
+  publisherPlatform?: string[]
+  impressionsWithIndex?: { lowerBound?: number; upperBound?: number }
+  spend?: { lowerBound?: number; upperBound?: number }
+  pageName?: string
+}
 
 export async function POST(_req: Request, { params }: { params: { id: string } }) {
   const supabase = await createClient()
@@ -15,33 +75,27 @@ export async function POST(_req: Request, { params }: { params: { id: string } }
 
   if (compErr || !competitor) return NextResponse.json({ error: 'Concorrente não encontrado' }, { status: 404 })
 
-  const accessToken = process.env.META_ACCESS_TOKEN
-  if (!accessToken) return NextResponse.json({ error: 'META_ACCESS_TOKEN não configurado' }, { status: 500 })
-
-  const query = competitor.facebook_page_id || competitor.name
-  const byPageId = !!competitor.facebook_page_id
-
   try {
-    const apiData = await searchAdLibrary(query, accessToken, byPageId)
-    const ads = apiData.data ?? []
+    const ads = await searchViaApify(competitor.name)
 
-    const rows = ads.map((ad: Record<string, unknown>) => {
-      const imp = ad.impressions as Record<string, unknown> | undefined
-      const spend = ad.spend as Record<string, unknown> | undefined
+    const rows = ads.map((ad: ApifyAd) => {
+      const body = ad.snapshot?.body?.text
+        ?? ad.snapshot?.cards?.[0]?.body
+        ?? null
       return {
         competitor_id: competitor.id,
-        ad_archive_id: ad.id as string,
-        creative_body: ((ad.ad_creative_bodies as string[]) ?? [])[0] ?? null,
-        creative_link_caption: ((ad.ad_creative_link_captions as string[]) ?? [])[0] ?? null,
-        ad_snapshot_url: (ad.ad_snapshot_url as string) ?? null,
+        ad_archive_id: String(ad.adArchiveID ?? ad.id ?? Math.random()),
+        creative_body: body,
+        creative_link_caption: ad.snapshot?.title ?? null,
+        ad_snapshot_url: ad.snapshotUrl ?? null,
         status: 'ACTIVE',
-        impressions_lower: imp?.lower_bound ? parseInt(imp.lower_bound as string, 10) : null,
-        impressions_upper: imp?.upper_bound ? parseInt(imp.upper_bound as string, 10) : null,
-        spend_lower: spend?.lower_bound ? parseFloat(spend.lower_bound as string) : null,
-        spend_upper: spend?.upper_bound ? parseFloat(spend.upper_bound as string) : null,
-        started_at: (ad.ad_delivery_start_time as string) ?? null,
-        last_seen_at: (ad.ad_delivery_stop_time as string) ?? new Date().toISOString().split('T')[0],
-        platforms: (ad.publisher_platforms as string[]) ?? [],
+        impressions_lower: ad.impressionsWithIndex?.lowerBound ?? null,
+        impressions_upper: ad.impressionsWithIndex?.upperBound ?? null,
+        spend_lower: ad.spend?.lowerBound ?? null,
+        spend_upper: ad.spend?.upperBound ?? null,
+        started_at: ad.startDate ? new Date(ad.startDate * 1000).toISOString().split('T')[0] : null,
+        last_seen_at: ad.endDate ? new Date(ad.endDate * 1000).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+        platforms: ad.publisherPlatform ?? [],
         last_synced_at: new Date().toISOString(),
       }
     })
