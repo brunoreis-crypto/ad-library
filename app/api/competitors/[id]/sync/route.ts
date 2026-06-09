@@ -16,7 +16,9 @@ export async function POST(_req: Request, { params }: { params: { id: string } }
     .from('competitors').select('*').eq('id', params.id).single()
   if (!competitor) return NextResponse.json({ error: 'Concorrente não encontrado' }, { status: 404 })
 
-  const searchUrl = `https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=BR&media_type=all&q=${encodeURIComponent(competitor.name)}&search_type=keyword_unordered`
+  const searchUrl = competitor.facebook_page_id
+    ? `https://www.facebook.com/${competitor.facebook_page_id}`
+    : `https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=BR&media_type=all&q=${encodeURIComponent(competitor.name)}&search_type=keyword_unordered`
 
   const res = await fetch(`https://api.apify.com/v2/acts/${APIFY_ACTOR}/runs?token=${token}`, {
     method: 'POST',

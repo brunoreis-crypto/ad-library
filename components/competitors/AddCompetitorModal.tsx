@@ -45,10 +45,13 @@ export default function AddCompetitorModal({ onClose, onSaved }: Props) {
               className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-red-500 transition-colors" />
           </div>
           <div>
-            <label className="block text-sm font-medium text-zinc-300 mb-1.5">Facebook Page ID</label>
-            <input value={pageId} onChange={e => setPageId(e.target.value)} placeholder="Ex: 102884711417611"
-              className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-red-500 transition-colors" />
-            <p className="text-xs text-zinc-600 mt-1">Página no Facebook → Sobre → ID da Página</p>
+            <label className="block text-sm font-medium text-zinc-300 mb-1.5">@ do Facebook</label>
+            <div className="flex items-center bg-zinc-800 border border-zinc-700 rounded-lg focus-within:border-red-500 transition-colors overflow-hidden">
+              <span className="px-3 text-zinc-500 text-sm">facebook.com/</span>
+              <input value={pageId} onChange={e => setPageId(e.target.value.replace('@', ''))} placeholder="SephoraBrasil"
+                className="flex-1 pr-3 py-2 bg-transparent text-sm text-white placeholder-zinc-500 focus:outline-none" />
+            </div>
+            <p className="text-xs text-zinc-600 mt-1">Opcional — torna a busca mais precisa</p>
           </div>
           <div>
             <label className="block text-sm font-medium text-zinc-300 mb-1.5">Setor</label>
