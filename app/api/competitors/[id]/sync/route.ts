@@ -21,7 +21,7 @@ export async function POST(_req: Request, { params }: { params: { id: string } }
   const res = await fetch(`https://api.apify.com/v2/acts/${APIFY_ACTOR}/runs?token=${token}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ urls: [{ url: searchUrl }], totalRecords: 50 }),
+    body: JSON.stringify({ urls: [{ url: searchUrl }], totalRecords: 25 }),
   })
 
   if (!res.ok) {

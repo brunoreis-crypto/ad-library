@@ -41,7 +41,7 @@ export default function CompetitorDetailPage() {
       setSyncMsg('Buscando anúncios na Meta Ad Library...')
 
       // 2. Polling a cada 5s até terminar
-      for (let i = 0; i < 24; i++) {
+      for (let i = 0; i < 36; i++) {
         await new Promise(r => setTimeout(r, 5000))
         const pollRes = await fetch(`/api/competitors/${id}/sync?runId=${runId}&datasetId=${datasetId}`)
         const pollData = await pollRes.json()
