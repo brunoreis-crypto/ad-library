@@ -30,18 +30,39 @@ export default function CompetitorDetailPage() {
 
   async function handleSync() {
     setSyncing(true)
-    setSyncMsg(null)
+    setSyncMsg('Iniciando busca...')
     try {
-      const res = await fetch(`/api/competitors/${id}/sync`, { method: 'POST' })
-      const data = await res.json()
-      if (!res.ok) {
-        setSyncMsg(`Erro: ${data.error}`)
-      } else {
-        setSyncMsg(`${data.synced} anúncios sincronizados`)
-        await loadData()
+      // 1. Inicia o job
+      const startRes = await fetch(`/api/competitors/${id}/sync`, { method: 'POST' })
+      const startData = await startRes.json()
+      if (!startRes.ok) { setSyncMsg(`Erro: ${startData.error}`); setSyncing(false); return }
+
+      const { runId, datasetId } = startData
+      setSyncMsg('Buscando anúncios na Meta Ad Library...')
+
+      // 2. Polling a cada 5s até terminar
+      for (let i = 0; i < 24; i++) {
+        await new Promise(r => setTimeout(r, 5000))
+        const pollRes = await fetch(`/api/competitors/${id}/sync?runId=${runId}&datasetId=${datasetId}`)
+        const pollData = await pollRes.json()
+
+        if (pollData.status === 'done') {
+          setSyncMsg(`${pollData.synced} anúncios sincronizados`)
+          await loadData()
+          setSyncing(false)
+          return
+        }
+        if (pollData.status === 'failed') {
+          setSyncMsg(`Erro: ${pollData.error}`)
+          setSyncing(false)
+          return
+        }
+        setSyncMsg(`Buscando anúncios... (${(i + 1) * 5}s)`)
       }
+
+      setSyncMsg('Timeout — tente novamente')
     } catch {
-      setSyncMsg('Erro ao conectar com a Meta API')
+      setSyncMsg('Erro ao conectar')
     } finally {
       setSyncing(false)
     }
