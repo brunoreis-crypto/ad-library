@@ -4,9 +4,6 @@ import { fetchAdsByAccount } from '@/lib/meta-api'
 
 export async function POST(_req: Request, { params }: { params: { id: string } }) {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 })
-
   const token = process.env.META_SYSTEM_TOKEN
   if (!token) return NextResponse.json({ error: 'META_SYSTEM_TOKEN não configurado' }, { status: 500 })
 

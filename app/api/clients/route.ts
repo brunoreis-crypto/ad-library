@@ -14,9 +14,6 @@ export async function GET() {
 
 export async function POST(req: Request) {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 })
-
   const body = await req.json()
   const { name, meta_account_id, color } = body
   if (!name) return NextResponse.json({ error: 'Nome obrigatório' }, { status: 400 })
