@@ -7,11 +7,12 @@ const DEFAULT_AD_FIELDS = [
 ].join(',')
 
 const DEFAULT_INSIGHTS_FIELDS = [
-  'spend', 'impressions', 'clicks', 'ctr', 'cpl', 'cpc', 'reach',
+  'spend', 'impressions', 'clicks', 'ctr', 'cpm', 'cpl', 'cpc', 'reach',
 ].join(',')
 
 export async function fetchAdsByAccount(accountId: string, accessToken: string) {
-  const url = new URL(`${BASE_URL}/act_${accountId}/ads`)
+  const normalizedId = accountId.replace(/^act_/, '')
+  const url = new URL(`${BASE_URL}/act_${normalizedId}/ads`)
   url.searchParams.set('access_token', accessToken)
   url.searchParams.set('fields', `${DEFAULT_AD_FIELDS},insights{${DEFAULT_INSIGHTS_FIELDS}}`)
   url.searchParams.set('effective_status', '["ACTIVE"]')

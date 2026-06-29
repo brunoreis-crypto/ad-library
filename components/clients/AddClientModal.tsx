@@ -10,7 +10,6 @@ const COLORS = ['#EF4444', '#F97316', '#FBBF24', '#34D399', '#60A5FA', '#A78BFA'
 export default function AddClientModal({ onClose, onSaved }: Props) {
   const [name, setName] = useState('')
   const [accountId, setAccountId] = useState('')
-  const [accessToken, setAccessToken] = useState('')
   const [color, setColor] = useState(COLORS[0])
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -23,7 +22,7 @@ export default function AddClientModal({ onClose, onSaved }: Props) {
       const res = await fetch('/api/clients', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name.trim(), meta_account_id: accountId.trim(), meta_access_token: accessToken.trim(), color }),
+        body: JSON.stringify({ name: name.trim(), meta_account_id: accountId.trim(), color }),
       })
       if (!res.ok) throw new Error()
       onSaved()
@@ -58,15 +57,9 @@ export default function AddClientModal({ onClose, onSaved }: Props) {
           </div>
           <div>
             <label className="block text-sm font-medium text-zinc-300 mb-1.5">Meta Ad Account ID</label>
-            <input value={accountId} onChange={e => setAccountId(e.target.value)} placeholder="Ex: 123456789"
+            <input value={accountId} onChange={e => setAccountId(e.target.value)} placeholder="Ex: act_123456789"
               className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-red-500 transition-colors" />
-            <p className="text-xs text-zinc-600 mt-1">Meta Business Manager → Contas de Anúncio</p>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-zinc-300 mb-1.5">Access Token</label>
-            <input type="password" value={accessToken} onChange={e => setAccessToken(e.target.value)} placeholder="Token do Meta Graph API"
-              className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-red-500 transition-colors" />
-            <p className="text-xs text-zinc-600 mt-1">developers.facebook.com/tools/explorer</p>
+            <p className="text-xs text-zinc-600 mt-1">Business Manager → Contas de Anúncio</p>
           </div>
           {error && <p className="text-sm text-red-400">{error}</p>}
           <div className="flex gap-3 pt-1">

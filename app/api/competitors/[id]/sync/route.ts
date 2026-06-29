@@ -17,8 +17,8 @@ export async function POST(_req: Request, { params }: { params: { id: string } }
   if (!competitor) return NextResponse.json({ error: 'Concorrente não encontrado' }, { status: 404 })
 
   const searchUrl = competitor.facebook_page_id
-    ? `https://www.facebook.com/${competitor.facebook_page_id}`
-    : `https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=BR&media_type=all&q=${encodeURIComponent(competitor.name)}&search_type=keyword_unordered`
+    ? `https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=BR&media_type=image&q=${encodeURIComponent(competitor.facebook_page_id)}&search_type=page`
+    : `https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=BR&media_type=image&q=${encodeURIComponent(competitor.name)}&search_type=keyword_unordered`
 
   const res = await fetch(`https://api.apify.com/v2/acts/${APIFY_ACTOR}/runs?token=${token}`, {
     method: 'POST',
@@ -64,7 +64,13 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
   const ads: Record<string, unknown>[] = await resultsRes.json()
 
   const rows = ads
-    .filter(ad => ad.ad_archive_id && ad.is_active)
+    .filter(ad => {
+      if (!ad.ad_archive_id || !ad.is_active) return false
+      const snap = ad.snapshot as Record<string, unknown> | undefined
+      const images = snap?.images as unknown[] | undefined
+      const videos = snap?.videos as unknown[] | undefined
+      return Array.isArray(images) && images.length > 0 && (!Array.isArray(videos) || videos.length === 0)
+    })
     .map(ad => {
       const snapshot = ad.snapshot as Record<string, unknown> | undefined
       const body = snapshot?.body as Record<string, unknown> | undefined
