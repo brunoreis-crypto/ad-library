@@ -19,7 +19,10 @@ export async function fetchAdsByAccount(accountId: string, accessToken: string) 
   url.searchParams.set('limit', '50')
 
   const res = await fetch(url.toString())
-  if (!res.ok) throw new Error(`Meta API error: ${res.status}`)
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error((err as { error?: { message?: string } }).error?.message ?? `Meta API error: ${res.status}`)
+  }
   return res.json()
 }
 
